@@ -18,6 +18,7 @@ This document outlines the various input settings and configurations you can use
 - [The `InputSelection` mini-language](#the-inputselection-mini-language)
 - [Contig Strings](#contig-strings)
 - [Input Option Specifics](#input-option-specifics)
+  - [Cyclic peptides](#cyclic-peptides)
   - [Unindexing Specifics](#unindexing-specifics)
   - [Partial Diffusion](#partial-diffusion)
   - [CIF Parser Options](#cif-parser-options)
@@ -125,6 +126,7 @@ Below is a table of all of the inputs that the `InputSpecification` accepts. Use
 | `contig`                                                       | `InputSelection`  | (Can only pass a contig string.) Indexed motif specification, e.g., `"A1-80,10,/0,B5-12"`.             |
 | `unindex`                                                      | `InputSelection`  | (Can only pass a contig string or dictionary.) Unindexed motif components, the specified residues can be anywhere in the final sequence. See [Unindexing Specifics](#unindexing-specifics) for more information. |
 | `length`                                                       | `str`             | Total design length constraint; `"min-max"` or int for specified length.                   |
+| `cyclic_chains` | `list[str]` or `null` | One assembled chain ID for N-to-C cyclic residue positional encoding, e.g. `["A"]`. Omitted, `null`, or `[]` keeps linear encoding. See [Cyclic peptides](#cyclic-peptides). |
 | `ligand`                                                       | `str`             | Ligand(s) by chemical component name (from [RSCB PDB](https://www.rcsb.org/)) or index. |
 | `cif_parser_args`                                              | `dict`            | Optional args to CIF loader. See [CIF parser options](#cif-parser-options) for more information. |
 | `extra`                                                        | `dict`            | Extra metadata (e.g., logs). Current options include `sampled_contig`. |
@@ -208,6 +210,26 @@ my_calculation:
 
 (input-option-specifics)=
 ## Input Option Specifics
+
+(cyclic-peptides)=
+### Cyclic peptides
+
+Set `cyclic_chains` to one **assembled design chain ID**, such as `["A"]`, to
+request cyclic residue positional encoding for a complete de novo canonical
+peptide. This supports peptide monomers and protein binders with existing weights.
+Chain IDs are case-sensitive. In `12,/0,E6-155`, the peptide is assembled as `A`
+and the target as `B`; select `["A"]`. In `E6-155,/0,12`, select `["B"]`.
+Hotspot selections continue to refer to input-file residues, such as `E64`.
+
+The selected chain must consist entirely of generated canonical amino-acid
+residues. Motif-containing rings, multiple cyclic chains, partial diffusion, and
+active symmetry are unsupported. Unrelated components, including target cofactors,
+retain existing RFD3 behavior. A cyclic chain must have its own model chain identity.
+
+Only intrachain residue positional offsets change. The option does not add a
+terminal bond to model inputs or CIF outputs, and geometric closure requires
+separate evaluation. The public request is retained in the normal output JSON.
+See the [macrocycle examples](examples/macrocycle_design.md) for monomer and binder inputs.
 
 (unindexing-specifics)=
 ### Unindexing Specifics
