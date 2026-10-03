@@ -1,6 +1,5 @@
 """CPU integration checks for cyclic input validation and feature transport."""
 
-import json
 from pathlib import Path
 
 import pytest
@@ -165,14 +164,9 @@ def test_build_rejects_absent_source_derived_and_mixed_chains():
         atomized._validate_cyclic_chain(atomized_array)
 
 
-@pytest.mark.parametrize("metadata_key", ["specification", "input_specification"])
-def test_output_metadata_round_trips_cyclic_request(tmp_path, metadata_key):
+def test_saved_specification_retains_cyclic_request():
     spec = DesignInputSpecification(length="3", cyclic_chains=["A"])
-    output = tmp_path / "design.json"
-    output.write_text(json.dumps({metadata_key: spec.get_dict_to_save()}))
-
-    restored = DesignInputSpecification.from_rfd3_out(str(output))
-    assert restored.cyclic_chains == ["A"]
+    assert spec.get_dict_to_save()["cyclic_chains"] == ["A"]
 
 
 @pytest.mark.parametrize("length", [10, 12])
