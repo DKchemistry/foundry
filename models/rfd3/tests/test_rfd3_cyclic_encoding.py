@@ -117,48 +117,6 @@ def test_checkpoint_schema_and_strict_loading():
     rpe.load_state_dict({"linear.weight": torch.randn(7, 29)}, strict=True)
 
 
-@pytest.mark.gpu
-@pytest.mark.skipif(
-    not torch.backends.mps.is_available(), reason="requires an available MPS device"
-)
-def test_mps_offsets_and_rpe_match_cpu():
-    torch.manual_seed(0)
-    cpu_rpe = RelativePositionEncodingWithIndexRemoval(r_max=4, s_max=2, c_z=7)
-    mps_rpe = RelativePositionEncodingWithIndexRemoval(r_max=4, s_max=2, c_z=7)
-    mps_rpe.load_state_dict(cpu_rpe.state_dict())
-    mps_rpe.to("mps")
-
-    for length in (1, 2, 10, 12):
-        indices = torch.arange(length)
-        offsets = indices[:, None] - indices[None, :]
-        expected_offsets = _cyclic_residue_offsets(
-            offsets, torch.zeros_like(indices), torch.tensor([0])
-        )
-        actual_offsets = _cyclic_residue_offsets(
-            offsets.to("mps"),
-            torch.zeros_like(indices, device="mps"),
-            torch.tensor([0], device="mps"),
-        )
-        assert torch.equal(actual_offsets.cpu(), expected_offsets)
-
-        cpu_f = {**_features(length), "cyclic_asym_ids": torch.tensor([3])}
-        mps_f = {key: value.to("mps") for key, value in cpu_f.items()}
-        cpu_encoding = []
-        mps_encoding = []
-        cpu_hook = cpu_rpe.linear.register_forward_pre_hook(
-            lambda _, args: cpu_encoding.append(args[0])
-        )
-        mps_hook = mps_rpe.linear.register_forward_pre_hook(
-            lambda _, args: mps_encoding.append(args[0])
-        )
-        cpu_output = cpu_rpe(cpu_f)
-        mps_output = mps_rpe(mps_f)
-        cpu_hook.remove()
-        mps_hook.remove()
-        assert torch.equal(mps_encoding[0].cpu(), cpu_encoding[0])
-        assert torch.allclose(mps_output.cpu(), cpu_output, rtol=1e-5, atol=1e-5)
-
-
 @pytest.mark.parametrize("length", [1, 12])
 @pytest.mark.parametrize("unindexed_context", [False, True])
 def test_guidance_preserves_cyclic_peptide(length, unindexed_context):

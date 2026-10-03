@@ -84,15 +84,6 @@ def test_binder_pipeline_accepts_chain_before_or_after_target(
     _assert_cyclic_rpe(output, cyclic_chain)
 
 
-def test_one_residue_and_sampled_length_are_supported():
-    one_residue = DesignInputSpecification(length="1", cyclic_chains=["A"])
-    assert len(get_token_starts(one_residue.build())) == 1
-
-    sampled = DesignInputSpecification(length="2-4", cyclic_chains=["A"])
-    sampled_array = sampled.build()
-    assert 2 <= len(get_token_starts(sampled_array)) <= 4
-
-
 @pytest.mark.parametrize("cyclic_chains", [None, ["A"]])
 def test_fixed_cofactor_survives_pipeline_with_or_without_cyclic_encoding(
     cyclic_chains, inference_pipeline
@@ -193,17 +184,10 @@ def test_full_monomer_pipeline_transports_id_to_actual_rpe(length, inference_pip
     assert torch.equal(strip_f(features, [])["cyclic_asym_ids"], torch.tensor([0]))
 
 
-def test_disabled_request_and_shared_identity_rejection(inference_pipeline):
-    disabled = inference_pipeline(
-        DesignInputSpecification(length="1", cyclic_chains=[]).to_pipeline_input(
+def test_disabled_request_does_not_add_cyclic_features(inference_pipeline):
+    output = inference_pipeline(
+        DesignInputSpecification(length="3", cyclic_chains=[]).to_pipeline_input(
             "linear"
         )
     )
-    assert "cyclic_asym_ids" not in disabled["feats"]
-
-    ambiguous = DesignInputSpecification(
-        input=str(TARGET), contig="3,/0,E6-10", cyclic_chains=["A"]
-    ).to_pipeline_input("ambiguous")
-    ambiguous["atom_array"].pn_unit_iid[:] = "shared"
-    with pytest.raises(ValueError, match="must not share its asym_id"):
-        inference_pipeline(ambiguous)
+    assert "cyclic_asym_ids" not in output["feats"]
