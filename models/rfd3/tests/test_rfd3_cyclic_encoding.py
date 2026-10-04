@@ -14,7 +14,7 @@ def test_signed_offsets(length):
     indices = torch.arange(length)
     offsets = indices[:, None] - indices[None, :]
     actual = _cyclic_residue_offsets(
-        offsets, torch.zeros_like(indices), torch.tensor([0])
+        offsets, torch.zeros_like(indices), indices, torch.tensor([0])
     )
     # Stable minimum independently expresses the shortest-path/tie contract.
     expected = torch.tensor(
@@ -32,6 +32,24 @@ def test_signed_offsets(length):
     if length % 2 == 0:
         assert actual[length // 2, 0] == length // 2
         assert actual[0, length // 2] == -length // 2
+
+
+def test_multiple_tokens_per_residue_do_not_inflate_cyclic_length():
+    residue_index = torch.tensor([0, 1, 1, 2, 3])
+    offsets = residue_index[:, None] - residue_index[None, :]
+    actual = _cyclic_residue_offsets(
+        offsets,
+        torch.zeros_like(residue_index),
+        residue_index,
+        torch.tensor([0]),
+    )
+    expected = torch.tensor(
+        [
+            [min((i - j, i - j + 4, i - j - 4), key=abs) for j in residue_index]
+            for i in residue_index
+        ]
+    )
+    assert torch.equal(actual, expected)
 
 
 def _features(length, context=True):

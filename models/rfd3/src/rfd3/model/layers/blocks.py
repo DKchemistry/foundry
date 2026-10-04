@@ -275,21 +275,24 @@ class SimpleRecycler(nn.Module):
 
 
 def _cyclic_residue_offsets(
-    offsets: torch.Tensor, asym_id: torch.Tensor, cyclic_asym_ids: torch.Tensor
+    offsets: torch.Tensor,
+    asym_id: torch.Tensor,
+    residue_index: torch.Tensor,
+    cyclic_asym_ids: torch.Tensor,
 ) -> torch.Tensor:
     """Wrap intrachain offsets for one canonical peptide, preserving half-ring ties.
 
     Args:
         offsets: Signed residue differences, with shape [I, I].
         asym_id: Chain identities, with shape [I].
-        cyclic_asym_ids: The selected chain identity, with shape [1]. Input
-            validation guarantees consecutive residues and one token per residue.
+        residue_index: Residue identities, with shape [I].
+        cyclic_asym_ids: The selected chain identity, with shape [1].
 
     Returns:
         Residue offsets with only the selected intrachain pairs wrapped.
     """
     selected = asym_id == cyclic_asym_ids[0]
-    length = selected.sum()
+    length = residue_index[selected].unique().shape[0]
     wrapped = torch.where(
         2 * offsets > length,
         offsets - length,
@@ -327,7 +330,10 @@ class RelativePositionEncodingWithIndexRemoval(nn.Module):
         cyclic_asym_ids = f.get("cyclic_asym_ids")
         if cyclic_asym_ids is not None and cyclic_asym_ids.numel() > 0:
             residue_offsets = _cyclic_residue_offsets(
-                residue_offsets, f["asym_id"], cyclic_asym_ids
+                residue_offsets,
+                f["asym_id"],
+                f["residue_index"],
+                cyclic_asym_ids,
             )
         d_residue_II = torch.where(
             b_samechain_II,
