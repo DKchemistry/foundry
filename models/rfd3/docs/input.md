@@ -214,22 +214,19 @@ my_calculation:
 (cyclic-peptides)=
 ### Cyclic peptides
 
-Set `cyclic_chains` to one **assembled design chain ID**, such as `["A"]`, to
-request cyclic residue positional encoding for a complete de novo canonical
-peptide. This supports peptide monomers and protein binders with existing weights.
-Chain IDs are case-sensitive. In `12,/0,E6-155`, the peptide is assembled as `A`
+To design cyclic peptides, set `cyclic_chains` to one **design chain ID**, such as `["A"]`. This
+requests cyclic residue positional encoding for a complete de novo canonical
+peptide, as previously described by [Rettie et al (2025)](https://www.nature.com/articles/s41589-025-01929-w). Both macrocycle monomers and binders are supported. 
+
+The chain IDs are case-sensitive. In `12,/0,E6-155`, the peptide is assembled as `A`
 and the target as `B`; select `["A"]`. In `E6-155,/0,12`, select `["B"]`.
 Hotspot selections continue to refer to input-file residues, such as `E64`.
 
-The selected chain must consist entirely of generated canonical amino-acid
-residues. Motif-containing rings, multiple cyclic chains, partial diffusion, and
-active symmetry are unsupported. Unrelated components, including target cofactors,
-retain existing RFD3 behavior. A cyclic chain must have its own model chain identity.
-
-Only intrachain residue positional offsets change. The option does not add a
-terminal bond to model inputs or CIF outputs, and geometric closure requires
-separate evaluation. The public request is retained in the normal output JSON.
 See the [macrocycle examples](examples/macrocycle_design.md) for monomer and binder inputs.
+
+Currently, the selected chain must consist entirely of generated canonical amino-acid
+residues. Motif-containing rings, multiple cyclic chains, partial diffusion, and
+active symmetry are not presently supported. 
 
 (unindexing-specifics)=
 ### Unindexing Specifics
