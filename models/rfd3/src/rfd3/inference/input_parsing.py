@@ -596,19 +596,14 @@ class DesignInputSpecification(BaseModel):
             component.endswith("P") and component[:-1].isdigit()
             for component in np.unique(selected.src_component)
         )
-        annotation_names = selected.get_annotation_categories()
-        is_atomized = (
-            np.any(selected.atomize) if "atomize" in annotation_names else False
-        )
         if (
             not is_de_novo
             or not np.all(np.isin(selected.res_name, STANDARD_AA))
-            or is_atomized
             or np.any(selected.is_motif_atom_unindexed)
         ):
             raise ValueError(
                 f"Cyclic chain {chain_id!r} must be a complete de novo canonical "
-                "peptide, with no source-derived, atomized, or unindexed residues."
+                "peptide, with no source-derived or unindexed residues."
             )
 
     def _build_init(self, atom_array_input_annotated):

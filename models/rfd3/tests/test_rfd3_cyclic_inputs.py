@@ -155,14 +155,6 @@ def test_build_rejects_absent_source_derived_and_mixed_chains():
     with pytest.raises(ValueError, match="complete de novo"):
         mixed.build()
 
-    atomized = DesignInputSpecification(length="3", cyclic_chains=["A"])
-    atomized_array = atomized.build()
-    atomized_array.set_annotation(
-        "atomize", [True] + [False] * (len(atomized_array) - 1)
-    )
-    with pytest.raises(ValueError, match="atomized"):
-        atomized._validate_cyclic_chain(atomized_array)
-
 
 def test_saved_specification_retains_cyclic_request():
     spec = DesignInputSpecification(length="3", cyclic_chains=["A"])
