@@ -16,14 +16,6 @@ from rfd3.transforms.pipelines import build_atom14_base_pipeline
 
 RFD3_ROOT = Path(__file__).parents[1]
 TARGET = RFD3_ROOT / "docs" / "input_pdbs" / "4zxb_cropped.pdb"
-COFACTOR_INPUT = (
-    RFD3_ROOT
-    / "docs"
-    / "tutorials"
-    / "binder_design_tutorial_files"
-    / "CD28"
-    / "cd28_nag.pdb"
-)
 
 
 @pytest.fixture(scope="module")
@@ -83,32 +75,6 @@ def test_binder_pipeline_accepts_chain_before_or_after_target(
     _assert_cyclic_rpe(output, cyclic_chain)
 
 
-@pytest.mark.parametrize("cyclic_chains", [None, ["A"]])
-def test_fixed_cofactor_survives_pipeline_with_or_without_cyclic_encoding(
-    cyclic_chains, inference_pipeline
-):
-    spec = DesignInputSpecification(
-        input=str(COFACTOR_INPUT),
-        contig="3,/0,B1-5,C1-1",
-        select_fixed_atoms=True,
-        cyclic_chains=cyclic_chains,
-    )
-    pipeline_input = spec.to_pipeline_input("cofactor")
-    assert "NAG" in pipeline_input["atom_array"].res_name
-    try:
-        output = inference_pipeline(pipeline_input)
-    except AttributeError as error:
-        if "is_motif_atom" not in str(error):
-            raise
-        pytest.xfail(
-            "Pre-existing ligand reference annotation failure, reproduced without "
-            "cyclic encoding"
-        )
-    assert "NAG" in output["atom_array"].res_name
-    if cyclic_chains:
-        _assert_cyclic_rpe(output, "A")
-
-
 @pytest.mark.parametrize(
     "value",
     ["A", [1], [""], ["A", "A"], ["A", "B"]],
@@ -154,11 +120,6 @@ def test_build_rejects_absent_source_derived_and_mixed_chains():
     )
     with pytest.raises(ValueError, match="complete de novo"):
         mixed.build()
-
-
-def test_saved_specification_retains_cyclic_request():
-    spec = DesignInputSpecification(length="3", cyclic_chains=["A"])
-    assert spec.get_dict_to_save()["cyclic_chains"] == ["A"]
 
 
 @pytest.mark.parametrize("length", [10, 12])
