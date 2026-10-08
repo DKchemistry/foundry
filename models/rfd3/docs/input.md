@@ -214,13 +214,13 @@ my_calculation:
 (cyclic-peptides)=
 ### Cyclic peptides
 
-To design cyclic peptides, set `cyclic_chains` to one **design chain ID**, such as `["A"]`. This
+To design cyclic peptides, set `cyclic_chains` to **one design chain ID**, such as `["A"]`. The chain IDs are case-sensitive. This
 requests cyclic residue positional encoding for a complete de novo canonical
 peptide, as previously described by [Rettie et al (2025)](https://www.nature.com/articles/s41589-025-01929-w). Both macrocycle monomers and binders are supported. 
 
-The chain IDs are case-sensitive. In `12,/0,E6-155`, the peptide is assembled as `A`
-and the target as `B`; select `["A"]`. In `E6-155,/0,12`, select `["B"]`.
-Hotspot selections continue to refer to input-file residues, such as `E64`.
+As an example, if the `contig` string is `12,/0,E6-155`, the peptide is assembled as `A`
+and the target as `B`; so `["A"]` should be selected as the cyclic peptide chain ID. If the `contig` string were intead `E6-155,/0,12`, select `["B"]`.
+Hotspot selections continue to refer to input-file residue labels, such as `E64`.
 
 See the [macrocycle examples](examples/macrocycle_design.md) for monomer and binder inputs.
 
